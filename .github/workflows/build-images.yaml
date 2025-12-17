@@ -1,0 +1,131 @@
+name: Build and Push Images
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'images/**'
+  pull_request:
+    paths:
+      - 'images/**'
+
+env:
+  REGISTRY: ghcr.io
+  # resulting images will be: ghcr.io/your-username/image-name:tag
+
+jobs:
+  # JOB 1: Detect which folders changed
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      # Expose the JSON list of changed folders to the next job
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v6.0.1
+        with:
+          # Required to see git history for changes
+          fetch-depth: 0
+
+      # https://github.com/tj-actions/changed-files
+      - name: Get changed files
+        id: diff
+        uses: tj-actions/changed-files@v47.0.1
+        with:
+          dir_names: true
+          dir_names_max_depth: 2
+          json: true
+          escape_json: false
+          # We push a new image only if the VERSION file is changed
+          files: |
+            images/**/VERSION
+
+      - name: Generate Matrix
+        id: set-matrix
+        run: |
+          CHANGED_FILES='${{ steps.diff.outputs.all_changed_files }}'
+          echo "Changed files: $CHANGED_FILES"
+
+          # If no files changed (e.g. only README), output empty list to prevent error
+          if [ "$CHANGED_FILES" == "[]" ]; then
+            echo "matrix=[]" >> "$GITHUB_OUTPUT"
+          else
+            # Logic to process the JSON
+            echo "matrix=$CHANGED_FILES" >> "$GITHUB_OUTPUT"
+          fi
+
+  # JOB 2: Build only the changed images
+  build:
+    needs: changes
+    if: needs.changes.outputs.matrix != '[]' && needs.changes.outputs.matrix != ''
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Parse the JSON string from the previous job
+        image-path: ${{ fromJson(needs.changes.outputs.matrix) }}
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@v6.0.1
+
+      # https://github.com/docker/setup-buildx-action
+      # Setup Docker Buildx (required for caching and advanced build features)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.11.1
+        # with:
+        #   # Forces use of the native docker engine, skipping the failed download
+        #   driver: docker
+
+      # https://github.com/docker/login-action
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3.6.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get Image Name
+        id: image_name
+        run: |
+          echo "name=$(basename ${{ matrix.image-path }})" >> $GITHUB_OUTPUT
+
+      - name: Read Version
+        id: version
+        run: |
+          VERSION=$(cat "./${{ matrix.image-path }}/VERSION")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Found version: $VERSION"
+
+      # https://github.com/docker/metadata-action
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5.10.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ steps.image_name.outputs.name }}
+          tags: |
+            # Always tag with 'latest' on main branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            # Always tag with date-sha (good for unique history)
+            type=sha,prefix={{date 'YYYYMMDD'}}-
+            # Tag with the version from the VERSION file
+            type=raw,value=${{ steps.version.outputs.version }}
+
+      # https://github.com/docker/build-push-action
+      - name: Build and push
+        uses: docker/build-push-action@v6.18.0
+        with:
+          context: ./${{ matrix.image-path }}
+          file: ./${{ matrix.image-path }}/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

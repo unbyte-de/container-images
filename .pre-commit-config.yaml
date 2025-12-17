@@ -1,0 +1,27 @@
+---
+repos:
+- repo: https://github.com/editorconfig-checker/editorconfig-checker.python
+  rev: "3.6.0"
+  hooks:
+  - id: editorconfig-checker
+    args: [--exclude=LICENSE]
+- repo: https://github.com/hadolint/hadolint
+  rev: v2.14.0
+  hooks:
+  - id: hadolint-docker
+- repo: https://github.com/adrienverge/yamllint.git
+  rev: v1.37.1
+  hooks:
+  - id: yamllint
+    args: [-c=./.yamllint]
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v6.0.0
+  hooks:
+  - id: check-merge-conflict
+  - id: check-executables-have-shebangs
+  - id: check-shebang-scripts-are-executable
+  - id: destroyed-symlinks
+  - id: end-of-file-fixer
+  - id: fix-byte-order-marker
+  - id: mixed-line-ending
+  - id: trailing-whitespace
