@@ -6,10 +6,10 @@ on:
     branches:
     - main
     paths:
-    - 'images/**'
+    - "images/**"
   pull_request:
     paths:
-    - 'images/**'
+    - "images/**"
 
 env:
   REGISTRY: ghcr.io
