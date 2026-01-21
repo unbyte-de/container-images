@@ -6,6 +6,12 @@
 
 # Container Images
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![GHCR](https://img.shields.io/badge/GHCR-ghcr.io-181717?logo=github&logoColor=white)](https://github.com/orgs/unbyte-de/packages?repo_name=container-images)
+<!-- [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit) -->
+<!-- [![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://www.docker.com/) -->
+<!-- [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md) -->
+
 A centralized collection of container images for DevOps workflows, infrastructure services, and utility tooling.
 
 ## Image Catalog
