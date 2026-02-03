@@ -49,3 +49,13 @@ To add a new image:
 3. Open a Pull Request.
 4. The CI/CD pipeline will automatically detect the new folder and build the image.
   **Note that the pipeline will build and push a new tag only when version is bumped in `VERSION` file.
+
+## Local Developmemt
+
+To run yamlfmt locally:
+
+```sh
+yamlfmt .
+# Or remove -quiet and/or -lint flag of yamlfmt in .pre-commit-config.yaml and run
+pre-commit run --all-files
+```
