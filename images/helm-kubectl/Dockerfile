@@ -1,4 +1,4 @@
-FROM alpine/helm:3.19.0@sha256:aef9b56f64e866207d9591d0abd8f6d767b36aadd12edf68f8a719716d9d29c9
+FROM alpine/helm:3.21.0@sha256:626f82264aa9b9ab9e232eb94e8c240bcc373bff7a29a20c848105e3a6f64b0e
 
 # TODO renovate
 ENV KUBECTL_VERSION=1.31.12
