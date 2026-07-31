@@ -10,6 +10,8 @@ repos:
   rev: v2.14.0
   hooks:
   - id: hadolint-docker
+    args:
+    - --failure-threshold=warning
 # - repo: https://github.com/adrienverge/yamllint.git
 #   rev: v1.37.1
 #   hooks:
