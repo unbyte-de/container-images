@@ -1,5 +1,5 @@
 # https://gitlab.com/to-be-continuous/pre-commit#building-your-own-pre-commit-image-1
-FROM registry.hub.docker.com/library/python:3.14.5-alpine3.23@sha256:5a824eb82cc75361f98611f3cfc5091ea33f10a6ccea4d4ebdabbc523b9a1614
+FROM registry.hub.docker.com/library/python:3.14.7-alpine3.23@sha256:8caa2adfeb414dfe68d8b257f7aea9e205a400521c2b13b2d2e5e731fb8e70e5
 
 # TODO renovate
 ENV PACKER_VERSION=1.11.2
