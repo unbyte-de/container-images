@@ -33,7 +33,7 @@ jobs:
     # https://github.com/tj-actions/changed-files
     - name: Get changed files
       id: diff
-      uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
+      uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
       with:
         dir_names: true
         dir_names_max_depth: 2
@@ -80,7 +80,7 @@ jobs:
     # https://github.com/docker/setup-buildx-action
     # Setup Docker Buildx (required for caching and advanced build features)
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+      uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
       # with:
       #   # Forces use of the native docker engine, skipping the failed download
       #   driver: docker
@@ -121,7 +121,7 @@ jobs:
 
     # https://github.com/docker/build-push-action
     - name: Build and push
-      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+      uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
       with:
         context: ./${{ matrix.image-path }}
         file: ./${{ matrix.image-path }}/Dockerfile
