@@ -8,7 +8,7 @@ SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 RUN mkdir /build && \
     apk add --no-cache \
       bash=5.3.3-r1 \
-      curl=8.17.0-r1 \
+      curl=8.22.0-r0 \
       && \
     rm -rf /var/cache/apk/* && \
     curl -s -LO "https://dl.k8s.io/release/v$KUBECTL_VERSION/bin/linux/amd64/kubectl" && \

@@ -4,7 +4,7 @@ ENV OPENTOFU_VERSION=1.9.3
 
 RUN mkdir /build && \
     apk add --no-cache \
-      curl=8.17.0-r1 \
+      curl=8.22.0-r0 \
       bash=5.3.3-r1 \
       && \
     rm -rf /var/cache/apk/* && \

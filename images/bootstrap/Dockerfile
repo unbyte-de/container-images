@@ -8,7 +8,7 @@ ENV HCLOUD_VERSION=1.50.0
 RUN mkdir /build && \
     apk add --no-cache \
       bash=5.3.3-r1 \
-      curl=8.17.0-r1 \
+      curl=8.22.0-r0 \
       helm=3.19.0-r2 \
       kubectl=1.34.2-r1 \
       kustomize=5.7.1-r4 \

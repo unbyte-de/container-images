@@ -8,7 +8,7 @@ SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 RUN mkdir /build && \
     apk add --no-cache \
       bash=5.2.37-r0 \
-      curl=8.14.1-r2 \
+      curl=8.22.0-r0 \
       yq=4.47.2-r1 \
       jq=1.8.1-r0 \
       && \
