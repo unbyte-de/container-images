@@ -13,7 +13,7 @@ RUN mkdir /build && \
       kubectl=1.34.2-r1 \
       kustomize=5.7.1-r4 \
       yq=4.49.2-r1 \
-      jq=1.8.1-r0 \
+      jq=1.8.2-r0 \
       age=1.2.1-r10 \
       sed=4.9-r2 \
       && \

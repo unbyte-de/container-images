@@ -10,7 +10,7 @@ RUN mkdir /build && \
       bash=5.3.3-r1 \
       curl=8.17.0-r1 \
       yq=4.49.2-r1 \
-      jq=1.8.1-r0 \
+      jq=1.8.2-r0 \
       openssl=3.5.4-r0 \
       openssh-keygen=10.2_p1-r0 \
       && \
