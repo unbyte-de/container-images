@@ -7,7 +7,7 @@ RUN apk add --no-cache \
     curl=8.17.0-r1 \
     make=4.4.1-r3 \
     helm=3.19.0-r2 \
-    git=2.52.0-r0 \
+    git=2.54.0-r0 \
     && \
     rm -rf /var/cache/apk/*
 

@@ -4,7 +4,7 @@ RUN mkdir /build && \
     apk add --no-cache \
       bash=5.3.3-r1 \
       curl=8.17.0-r1 \
-      git=2.52.0-r0 \
+      git=2.54.0-r0 \
       yq=4.49.2-r1 \
       jq=1.8.1-r0 \
       && \
