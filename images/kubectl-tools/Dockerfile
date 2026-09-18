@@ -12,7 +12,7 @@ RUN mkdir /build && \
       yq=4.49.2-r1 \
       jq=1.8.1-r0 \
       openssl=3.5.4-r0 \
-      openssh-keygen=10.2_p1-r0 \
+      openssh-keygen=10.3_p1-r1 \
       && \
     rm -rf /var/cache/apk/* && \
     curl -s -LO "https://dl.k8s.io/release/v$KUBECTL_VERSION/bin/linux/amd64/kubectl" && \
