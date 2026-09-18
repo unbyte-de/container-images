@@ -14,7 +14,7 @@ RUN mkdir /build && \
     apk add --no-cache \
       git=2.52.0-r0 \
       bash=5.3.3-r1 \
-      gnupg=2.4.8-r1 \
+      gnupg=2.4.9-r1 \
       && \
     # Install packer
     # https://developer.hashicorp.com/well-architected-framework/operational-excellence/verify-hashicorp-binary#create-alpine-linux-container-with-hashicorp-tools
