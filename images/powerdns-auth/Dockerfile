@@ -1,4 +1,4 @@
-FROM powerdns/pdns-auth-49:4.9.15@sha256:8fa70ccc8c0d9c8d4bb6cb4459ee7da22ac0b0da126a98f5dcec27fc4244cf8c
+FROM powerdns/pdns-auth-49:4.9.17@sha256:b554df74bbde1afa7caedad4af9c91378be6d46d05807d089b3c7c443002e684
 
 USER root
 
