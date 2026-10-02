@@ -1,4 +1,4 @@
-FROM registry.hub.docker.com/library/python:3.14.5-alpine3.23@sha256:5a824eb82cc75361f98611f3cfc5091ea33f10a6ccea4d4ebdabbc523b9a1614
+FROM registry.hub.docker.com/library/python:3.14.8-alpine3.23@sha256:e8f2d5363ff792d4d9450f177cd7b9717a7915c3b7417d00557bf724e712f78d
 
 # TODO renovate
 ENV CLUSTERCTL_VERSION=1.9.1
