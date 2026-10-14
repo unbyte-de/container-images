@@ -1,7 +1,7 @@
 FROM alpine/helm:3.21.0@sha256:626f82264aa9b9ab9e232eb94e8c240bcc373bff7a29a20c848105e3a6f64b0e
 
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
-ENV KUBECTL_VERSION=1.34.12
+ENV KUBECTL_VERSION=1.35.9
 
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
