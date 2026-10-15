@@ -1,4 +1,4 @@
-FROM registry.hub.docker.com/library/python:3.14.5-alpine3.23@sha256:5a824eb82cc75361f98611f3cfc5091ea33f10a6ccea4d4ebdabbc523b9a1614
+FROM registry.hub.docker.com/library/python:3.15.0-alpine3.23@sha256:70ba88b13e449304d8422f9c935c4aea5515877770235f044e0ed3af2d3574c2
 
 RUN mkdir /build
 
