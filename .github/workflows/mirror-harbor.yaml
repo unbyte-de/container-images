@@ -1,15 +1,19 @@
 ---
 name: Mirror Harbor images to GAR
 
-# Copies Harbor releases from ghcr.io/goharbor into the GAR backup repository
+# Copies Harbor releases into the GAR backup repository
 # europe-west3-docker.pkg.dev/unbyte-devops/backup, which unbyte-mgt and stg-mgt pull Harbor from.
 # Node containerd mirrors docker.io/ghcr.io/quay.io/... through the Harbor proxy cache, but not
 # pkg.dev, so Harbor never has to pull its own images through itself.
 #
 # Harbor's config.yaml in unbyte-orbit-infra-services sets only the image repository; the tag is
-# the chart's appVersion. So every Harbor chart bump (Renovate) needs that tag here first: this job
-# copies every stable release from v2.15.0 on that is missing in GAR. Copies are multi-arch and
-# keep the upstream digest.
+# the chart's appVersion. So every Harbor chart bump (Renovate) needs that tag here first. This job
+# has no hardcoded versions or image names:
+# - images: every goharbor image the latest Harbor chart references, so a new or renamed component
+#   (like redis-photon -> valkey-photon in 2.15) is picked up without editing this file;
+# - tags: every stable release (vX.Y.Z, any major) from MIN_VERSION on that is missing in GAR.
+# Source is ghcr.io/goharbor (no Docker Hub rate limits), docker.io/goharbor for images that are
+# not published there (e.g. harbor-db, nginx-photon). Copies are multi-arch and keep the digest.
 #
 # GCP setup (project unbyte-devops): service account with roles/artifactregistry.writer on the
 # "backup" repository, impersonated through Workload Identity Federation by this repository.
@@ -33,10 +37,12 @@ jobs:
   mirror:
     runs-on: ubuntu-latest
     env:
-      SRC: ghcr.io/goharbor
+      CHART_REPO: https://helm.goharbor.io
+      SOURCES: ghcr.io/goharbor docker.io/goharbor
       DST: europe-west3-docker.pkg.dev/unbyte-devops/backup
-      # The images chart 1.19 (Harbor 2.15) deploys with our values (external DB, ingress, no nginx).
-      IMAGES: harbor-core harbor-jobservice harbor-portal harbor-registryctl registry-photon trivy-adapter-photon harbor-exporter valkey-photon
+      # Lower bound only, so the first run doesn't copy years of old releases (v2.15.0 is the first
+      # version deployed from this repo). There is no upper bound.
+      MIN_VERSION: v2.15.0
       DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
     steps:
     # https://github.com/google-github-actions/auth
@@ -52,6 +58,12 @@ jobs:
     - name: Set up crane
       uses: imjasonh/setup-crane@feee3b6bb0d4c68370f256a4502498c9227e5c6b # v0.7
 
+    # https://github.com/Azure/setup-helm
+    - name: Set up Helm
+      uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # v5
+      with:
+        version: v4.3.2
+
     - name: Copy missing Harbor releases
       env:
         GAR_TOKEN: ${{ steps.gcp.outputs.access_token }}
@@ -59,26 +71,71 @@ jobs:
         set -euo pipefail
         printf '%s' "${GAR_TOKEN}" | crane auth login "${DST%%/*}" -u oauth2accesstoken --password-stdin
 
-        echo "### Harbor images copied to ${DST}" >> "${GITHUB_STEP_SUMMARY}"
+        # $1 >= $2 in version order (v2.9.0 < v2.15.0 < v3.0.0 < v10.0.0).
+        ver_ge() { [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | head -n1)" = "$2" ]; }
+
+        chart_version=$(helm show chart harbor --repo "${CHART_REPO}" | sed -n 's/^version: *//p')
+        images=$(helm show values harbor --repo "${CHART_REPO}" \
+          | grep -oE 'repository: *docker[.]io/goharbor/[a-z0-9-]+' | sed 's#.*/##' | sort -u || true)
+        if [ -z "${images}" ]; then
+          echo "::error::No goharbor images found in Harbor chart ${chart_version}"
+          exit 1
+        fi
+
+        mode=""
+        if [ "${DRY_RUN}" = "true" ]; then
+          mode=" (dry run)"
+        fi
+        {
+          echo "### Harbor images to ${DST}${mode}"
+          echo "Images from chart ${chart_version}: $(tr '\n' ' ' <<<"${images}")"
+          echo ""
+        } >> "${GITHUB_STEP_SUMMARY}"
+
         copied=0
-        for img in ${IMAGES}; do
-          # Stable releases from v2.15.0 on (no -rc/-dev tags).
-          src_tags=$(crane ls "${SRC}/${img}" | grep -E '^v2[.](1[5-9]|[2-9][0-9])[.][0-9]+$' || true)
+        failed=0
+        for img in ${images}; do
+          src=""
+          src_tags=""
+          for reg in ${SOURCES}; do
+            if src_tags=$(crane ls "${reg}/${img}" 2>/dev/null); then
+              src="${reg}"
+              break
+            fi
+          done
+          if [ -z "${src}" ]; then
+            echo "::error::${img} not found in any of: ${SOURCES}"
+            echo "- :x: ${img}: not found in ${SOURCES}" >> "${GITHUB_STEP_SUMMARY}"
+            failed=$((failed + 1))
+            continue
+          fi
           # An image that was never copied has no repository in GAR yet.
           dst_tags=$(crane ls "${DST}/${img}" 2>/dev/null || true)
-          for tag in ${src_tags}; do
-            if grep -qxF "${tag}" <<<"${dst_tags}"; then
+          # Stable releases only (no -rc/-dev tags), any major version.
+          for tag in $(grep -E '^v[0-9]+[.][0-9]+[.][0-9]+$' <<<"${src_tags}" | sort -V); do
+            if ! ver_ge "${tag}" "${MIN_VERSION}" || grep -qxF "${tag}" <<<"${dst_tags}"; then
               continue
             fi
             if [ "${DRY_RUN}" = "true" ]; then
-              echo "- [dry-run] ${img}:${tag}" | tee -a "${GITHUB_STEP_SUMMARY}"
+              echo "- [dry-run] ${img}:${tag} (from ${src})" | tee -a "${GITHUB_STEP_SUMMARY}"
               continue
             fi
-            echo "::group::${img}:${tag}"
-            crane copy "${SRC}/${img}:${tag}" "${DST}/${img}:${tag}"
+            echo "::group::${img}:${tag} (from ${src})"
+            if crane copy "${src}/${img}:${tag}" "${DST}/${img}:${tag}"; then
+              echo "- ${img}:${tag} (from ${src})" >> "${GITHUB_STEP_SUMMARY}"
+              copied=$((copied + 1))
+            else
+              # Keep going: the next run retries every tag that is still missing.
+              echo "::error::Copy of ${img}:${tag} from ${src} failed"
+              echo "- :x: ${img}:${tag} (from ${src})" >> "${GITHUB_STEP_SUMMARY}"
+              failed=$((failed + 1))
+            fi
             echo "::endgroup::"
-            echo "- ${img}:${tag}" >> "${GITHUB_STEP_SUMMARY}"
-            copied=$((copied + 1))
           done
         done
-        echo "**Copied: ${copied}**" >> "${GITHUB_STEP_SUMMARY}"
+
+        {
+          echo ""
+          echo "**Copied: ${copied} · Failed: ${failed}**"
+        } >> "${GITHUB_STEP_SUMMARY}"
+        [ "${failed}" -eq 0 ]
